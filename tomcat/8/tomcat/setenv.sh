@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+JAVA_OPTS="$JAVA_OPTS $APM_OPTS $PROMETHEUS_JMX_OPTS"
