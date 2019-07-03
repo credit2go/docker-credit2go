@@ -1,0 +1,5 @@
+startDelaySeconds: 120
+lowercaseOutputName: false
+lowercaseOutputLabelNames: false
+rules:
+  - pattern: ".*"
