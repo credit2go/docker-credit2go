@@ -27,7 +27,7 @@ then
 fi
 
 #Check Path, only trigger project and product
-path=${gitrepo: 32 :7}
+path=${gitrepo: 33 :7}
 if [ "$path" == "project" ] || [ "$path" == "product" ]
 then
   echo "Jenkins Project Address is: ${job}"
