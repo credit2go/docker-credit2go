@@ -22,14 +22,16 @@ foldername=${foldername%/job/$projectname/}
 #将路径中job/去除	
 foldername=${foldername//job\//}
 
+user=${JENKINS_USER}
 token=${JENKINS_TOKEN}
+#加载最新的模板文件
 #加载最新的模板文件
 echo "Jenkins Project Path is: ${foldername}"
 echo "Jenkins Project Path is: ${projectname}"
 
-rm -rf /opt/hook/jenkins/*.xml
-curl -s --user $user:$token $jenkins/job/template/config.xml -o /opt/hook/jenkins/folder.xml
-curl -s --user $user:$token $jenkins/job/template/job/multibranch-pipeline/config.xml -o /opt/hook/jenkins/job.xml
+rm -rf /opt/jenkins/*.xml
+curl -s --user $user:$token $jenkins/job/template/config.xml -o /opt/jenkins/folder.xml
+curl -s --user $user:$token $jenkins/job/template/job/multibranch-pipeline/config.xml -o /opt/jenkins/job.xml
 
 #按顺序检查文件夹路径
 array=(${foldername//\// })  
@@ -41,25 +43,25 @@ do
 		status=$(curl -s -I -X POST $url/ --user $user:$token|grep HTTP|awk {'print $2'})
 		if [ "$status" -ne 200 ]
 		then
-			cp /opt/hook/jenkins/folder.xml /opt/hook/jenkins/$var.xml
+			cp /opt/jenkins/folder.xml /opt/jenkins/$var.xml
 			#修改displayname
-			sed -i 's/模版项目/'$var'/g' /opt/hook/jenkins/$var.xml
-			sed -i 's/Jenkins各种模版项目/''/g' /opt/hook/jenkins/$var.xml
+			sed -i 's/模版项目/'$var'/g' /opt/jenkins/$var.xml
+			sed -i 's/Jenkins各种模版项目/''/g' /opt/jenkins/$var.xml
 			#Jenkins项目不存在，创建folder
 			createurl=${url%/job/$var}
-			curl -s -X POST $createurl'/createItem?name='$var --user $user:$token --data-binary @/opt/hook/jenkins/$var.xml -H "Content-Type:text/xml"
-			rm -f /opt/hook/jenkins/$var.xml
+			curl -s -X POST $createurl'/createItem?name='$var --user $user:$token --data-binary @/opt/jenkins/$var.xml -H "Content-Type:text/xml"
+			rm -f /opt/jenkins/$var.xml
 		fi
 done
 #创建Jenkins 项目，类型MutliBranchPipeline
-cp /opt/hook/jenkins/job.xml /opt/hook/jenkins/$projectname.xml
+cp /opt/jenkins/job.xml /opt/jenkins/$projectname.xml
 #修改displayname
-sed -i 's/多分支GitLab流水线/'$projectname'/g' /opt/hook/jenkins/$projectname.xml
+sed -i 's/多分支GitLab流水线/'$projectname'/g' /opt/jenkins/$projectname.xml
 #修改scm地址
-sed -i 's/'$gitlab'/'$giturl'/g' /opt/hook/jenkins/$projectname.xml
+sed -i 's/'$gitlab'/'$giturl'/g' /opt/jenkins/$projectname.xml
 createurl=${projecturl%/job/$projectname/}	
-curl -s -X POST $createurl'/createItem?name='$projectname --user $user:$token --data-binary @/opt/hook/jenkins/$projectname.xml -H "Content-Type:text/xml"
-rm -rf /opt/hook/jenkins/$projectname.xml
+curl -s -X POST $createurl'/createItem?name='$projectname --user $user:$token --data-binary @/opt/jenkins/$projectname.xml -H "Content-Type:text/xml"
+rm -rf /opt/jenkins/$projectname.xml
 echo "Jenkins Job has been created."
 #触发初始化构建
 curl -s -X POST $projecturl'/build?cause=initialize' --user $user:$token

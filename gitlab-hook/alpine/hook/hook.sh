@@ -39,7 +39,7 @@ then
   if [ "$status" -ne 200 ]
   then
   	echo "Jenkins Job not configure"
-  	/bin/bash /opt/hook/jenkins/createJenkinsJob.sh $job/ $branch $gitrepo
+  	/bin/bash /opt/jenkins/createJenkinsJob.sh $job/ $branch $gitrepo
   else
   	#job exists
   	#Jenkins Job API Call or Scan Branch
