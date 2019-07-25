@@ -19,6 +19,8 @@ RUN wget -O /opt/prometheus/prometheus-agent.jar ${prometheusjmx} \
     && tar -zxvf skywalking.tar.gz \
     && mv /tmp/apache-skywalking-apm-bin/agent/activations /opt/skywalking/activations \
     && mv /tmp/apache-skywalking-apm-bin/agent/plugins /opt/skywalking/plugins \
+    && mv /tmp/apache-skywalking-apm-bin/agent/optional-plugins/apm-gson*.jar /opt/skywalking/plugins/ \
+    && mv /tmp/apache-skywalking-apm-bin/agent/optional-plugins/apm-trace-ignore-plugin*.jar /opt/skywalking/plugins/ \
     && mv /tmp/apache-skywalking-apm-bin/agent/skywalking-agent.jar /opt/skywalking/skywalking-agent.jar \
     && rm -rf /tmp/* \
     && ln -s /usr/local/tomcat/logs /opt/skywalking/logs
