@@ -1,0 +1,4 @@
+credit2go/tengine:2.3.1 tengine/2.3.1/Dockerfile
+credit2go/tomcat:8 tomcat/8/Dockerfile
+credit2go/openjdk:8 openjdk/8/Dockerfile
+credit2go/builder:alpine builder/alpine/Dockerfile

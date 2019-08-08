@@ -2,7 +2,7 @@
 
 credit2go docker file for base image
 
-1. [credit2go/tegine:2.3.1](https://hub.docker.com/r/credit2go/builder/tags)
+1. [credit2go/tengine:2.3.1](https://hub.docker.com/r/credit2go/tengine/tags)
 
 	install tegnine with opentracing with zipkin support  
 	install nginx-vts module to support nginx-vts-exporter in prometheus
