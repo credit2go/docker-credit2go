@@ -1,4 +1,4 @@
-FROM node:lts-alpine
+FROM node:10.15.3-alpine
 
 ENV LANG C.UTF-8
 ENV JAVA_HOME /usr/lib/jvm/java-1.8-openjdk
@@ -10,13 +10,14 @@ ARG USER_HOME_DIR="/root"
 ARG BASE_URL=https://mirrors.tuna.tsinghua.edu.cn/apache/maven/maven-3/${MAVEN_VERSION}/binaries
 ENV MAVEN_HOME /usr/share/maven
 ENV MAVEN_CONFIG "$USER_HOME_DIR/.m2"
-ENV DOCKER_CHANNEL stable
-ENV DOCKER_VERSION 18.09.6
+ARG DOCKER_CHANNEL="stable"
+ARG DOCKER_VERSION=18.09.6
 ENV GRADLE_HOME /opt/gradle
 ENV GRADLE_VERSION 5.4.1
 ENV NODE_ENV production
-ENV KUBE_VERSION v1.13.4
-ENV HELM_VERSION v2.13.0
+ARG KUBE_VERSION="v1.13.4"
+ARG HELM_VERSION="v2.13.0"
+ARG CLAIR_SCANNER_VERSION="v12"
 
 
 RUN echo "https://mirrors.aliyun.com/alpine/v3.9/main" > /etc/apk/repositories && \
@@ -74,13 +75,15 @@ RUN echo "https://mirrors.aliyun.com/alpine/v3.9/main" > /etc/apk/repositories &
     && tar -zxvf helm.tar.gz \
     && mv /tmp/linux-amd64/helm /usr/bin/ \
     && mv /tmp/kubectl /usr/bin/ \
+    && curl -LO https://github.com/arminc/clair-scanner/releases/download/${CLAIR_SCANNER_VERSION}/clair-scanner_linux_amd64 \
+    && mv /tmp/clair-scanner_linux_amd64 /usr/bin/clair-scanner \
     && rm -rf /tmp/* \
-    && chmod a+x /usr/bin/kubectl
+    && chmod a+x /usr/bin/helm \
+    && chmod a+x /usr/bin/kubectl \
+    && chmod a+x /usr/bin/clair-scanner
 
 COPY mvn-entrypoint.sh /usr/local/bin/mvn-entrypoint.sh
 COPY settings-docker.xml /usr/share/maven/ref/
-#COPY bin/kubectl /usr/bin/kubectl
-#COPY bin/helm /usr/bin/helm
 
 ENTRYPOINT ["/usr/local/bin/mvn-entrypoint.sh"]
 CMD ["mvn"]

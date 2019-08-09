@@ -38,7 +38,8 @@ credit2go docker file for CI/CD
     docker: 18.09.6 (copy from docker:stable)  
     helm: v2.13.0  
     kubectl: v1.13.4  
-    git: 2.20.1      
+    git: 2.20.1
+    clair-scanner: v1.2.8      
 
 2. [credit2go/gitlab-hook:alpine](https://hub.docker.com/r/credit2go/gitlab-hook/tags)
 	
