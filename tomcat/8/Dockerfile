@@ -10,8 +10,8 @@ COPY skywalking /opt/skywalking
 COPY prometheus /opt/prometheus
 COPY docker-entrypoint.sh /opt
 
-ARG skywalking="http://mirrors.tuna.tsinghua.edu.cn/apache/skywalking/6.2.0/apache-skywalking-apm-6.2.0.tar.gz"
-ARG prometheusjmx="https://maven.aliyun.com/repository/central/io/prometheus/jmx/jmx_prometheus_javaagent/0.11.0/jmx_prometheus_javaagent-0.11.0.jar"
+ARG skywalking="http://mirrors.tuna.tsinghua.edu.cn/apache/skywalking/6.3.0/apache-skywalking-apm-6.3.0.tar.gz"
+ARG prometheusjmx="https://maven.aliyun.com/repository/central/io/prometheus/jmx/jmx_prometheus_javaagent/0.12.0/jmx_prometheus_javaagent-0.12.0.jar"
 
 RUN wget -O /opt/prometheus/prometheus-agent.jar ${prometheusjmx} \
     && wget -O /tmp/skywalking.tar.gz ${skywalking} \
@@ -23,7 +23,11 @@ RUN wget -O /opt/prometheus/prometheus-agent.jar ${prometheusjmx} \
     && mv /tmp/apache-skywalking-apm-bin/agent/optional-plugins/apm-trace-ignore-plugin*.jar /opt/skywalking/plugins/ \
     && mv /tmp/apache-skywalking-apm-bin/agent/skywalking-agent.jar /opt/skywalking/skywalking-agent.jar \
     && rm -rf /tmp/* \
-    && ln -s /usr/local/tomcat/logs /opt/skywalking/logs
+    && ln -s /usr/local/tomcat/logs /opt/skywalking/logs \
+    && echo "upgrade to fix Vulnerabilities" \
+    && echo "https://mirrors.aliyun.com/alpine/v3.9/main" > /etc/apk/repositories \
+    && echo "https://mirrors.aliyun.com/alpine/v3.9/community" >> /etc/apk/repositories \
+    && apk upgrade --no-cache
 
 EXPOSE 8080 9199
 
