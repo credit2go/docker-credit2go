@@ -57,8 +57,11 @@ done
 cp /opt/jenkins/job.xml /opt/jenkins/$projectname.xml
 #修改displayname
 sed -i 's/多分支GitLab流水线/'$projectname'/g' /opt/jenkins/$projectname.xml
-#修改scm地址
+#修改scm地址, normal Git plugin
 sed -i 's/'$gitlab'/'$giturl'/g' /opt/jenkins/$projectname.xml
+#修改scm地址, type GitLab Branch Source Plugin support
+sed -i 's/template/'$foldername'/g' /opt/jenkins/$projectname.xml
+sed -i 's/gitflow/'$projectname'/g' /opt/jenkins/$projectname.xml
 createurl=${projecturl%/job/$projectname/}	
 curl -s -X POST $createurl'/createItem?name='$projectname --user $user:$token --data-binary @/opt/jenkins/$projectname.xml -H "Content-Type:text/xml"
 rm -rf /opt/jenkins/$projectname.xml

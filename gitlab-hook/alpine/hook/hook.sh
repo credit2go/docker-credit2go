@@ -23,7 +23,7 @@ status=$(curl -s --connect-timeout 10 -I $jenkins/ --user $user:$token |grep HTT
 if [ "$status" -ne 200 ]
 then
 	echo "Jenkins Server is not able to access"
-	exit 0
+	exit 1
 fi
 
 #Check Path, only trigger project and product
