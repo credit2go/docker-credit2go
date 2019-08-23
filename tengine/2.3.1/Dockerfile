@@ -1,4 +1,4 @@
-FROM alpine:3.9
+FROM alpine:3.9 AS builder
 
 RUN echo "https://mirrors.aliyun.com/alpine/v3.9/main" > /etc/apk/repositories && \
     echo "https://mirrors.aliyun.com/alpine/v3.9/community" >> /etc/apk/repositories && \
@@ -104,6 +104,23 @@ RUN echo "https://mirrors.aliyun.com/alpine/v3.9/main" > /etc/apk/repositories &
 	&& ln -sf /dev/stdout /var/log/nginx/access.log \
 	&& ln -sf /dev/stderr /var/log/nginx/error.log
 
+FROM alpine:3.9
+RUN echo "https://mirrors.aliyun.com/alpine/v3.9/main" > /etc/apk/repositories \
+    && echo "https://mirrors.aliyun.com/alpine/v3.9/community" >> /etc/apk/repositories \
+	&& addgroup -S nginx \
+	&& adduser -D -S -h /var/cache/nginx -s /sbin/nologin -G nginx nginx \
+	&& apk add --no-cache gcc openssl pcre zlib gnupg1 libxslt gd geoip perl tzdata \
+	&& echo "upgrade to fix Vulnerabilities" \
+    && apk upgrade --no-cache \
+	# forward request and error logs to docker log collector
+	&& mkdir -p /var/log/nginx \
+	&& ln -sf /dev/stdout /var/log/nginx/access.log \
+	&& ln -sf /dev/stderr /var/log/nginx/error.log
+
+COPY --from=builder /etc/nginx /etc/nginx
+COPY --from=builder /usr/sbin/nginx /usr/sbin/nginx
+COPY --from=builder /usr/lib/nginx /usr/lib/nginx
+COPY --from=builder /usr/local/lib/ /usr/local/lib
 COPY nginx.conf /etc/nginx/nginx.conf
 COPY nginx.vh.default.conf /etc/nginx/conf.d/default.conf
 COPY zipkin.json /etc/zipkin/zipkin.json
