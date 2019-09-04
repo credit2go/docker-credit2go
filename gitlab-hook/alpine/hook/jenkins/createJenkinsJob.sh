@@ -1,9 +1,10 @@
 #!/bin/bash
 #基于Git Lab地址自动创建相关的Jenkins项目
 
-projecturl=$1
-branchname=$2
-gitrepo=$3
+#read parameter from input
+projecturl=$1  #Jenkins project url
+branchname=$2  #gitlab branch name to build
+gitrepo=$3    #gitlab url
 #转义处理
 giturl=${gitrepo//\//\\\/}
 
@@ -38,6 +39,7 @@ array=(${foldername//\// })
 url=$jenkins
 for var in ${array[@]}
 do
+    echo "Folder is: ${var}"
 			cp /opt/jenkins/folder.xml /opt/jenkins/$var.xml
 			#修改descritpion
 			sed -i 's/Jenkins各种模版项目/''/g' /opt/jenkins/$var.xml
@@ -69,22 +71,22 @@ sed -i 's/多分支GitLab流水线/'$projectname'/g' /opt/jenkins/$projectname.x
 #修改scm地址, normal Git plugin
 sed -i 's/'$gitlab'/'$giturl'/g' /opt/jenkins/$projectname.xml
 #修改scm地址, GitLab Branch Source Plugin
+#转义处理
+foldername=${foldername//\//\\\/}
 sed -i 's/template/'$foldername'/g' /opt/jenkins/$projectname.xml
 sed -i 's/gitflow/'$projectname'/g' /opt/jenkins/$projectname.xml
 createurl=${projecturl%/job/$projectname/}
-status=$(curl -s -I projecturl/ --user $user:$token|grep HTTP|awk {'print $2'})
+status=$(curl -s -I $projecturl/ --user $user:$token|grep HTTP|awk {'print $2'})
 if [ "$status" -ne 200 ]
 then
-    #
-    echo "Create Job"
     curl -s -X POST $createurl'/createItem?name='$projectname --user $user:$token --data-binary @/opt/jenkins/$projectname.xml -H "Content-Type:text/xml"
+    echo "Jenkins Job has been created."
 else
-    #
-    echo "Update Job"
     curl -s -X POST ${projecturl}'/config.xml' --user $user:$token --data-binary @/opt/jenkins/$projectname.xml -H "Content-Type:text/xml"
+    echo "Jenkins Job has been updated."
 fi
 rm -rf /opt/jenkins/$projectname.xml
-echo "Jenkins Job has been created."
+
 #触发初始化构建
 curl -s -X POST ${projecturl}'/build?cause=initialize' --user $user:$token
 exit 0

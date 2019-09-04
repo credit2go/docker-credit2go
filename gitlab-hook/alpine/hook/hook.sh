@@ -1,5 +1,8 @@
 #!/bin/bash
+#Use Jenkins API to create Job or Update Job
+#this file trigger from GitLab-CI by using env defined in gitlab-runner
 
+#define variable from input or env
 string=${CI_PROJECT_DIR}
 substring=/builds/gitlab
 jenkins=${JENKINS_URL}
@@ -27,6 +30,8 @@ then
 fi
 
 #Check Path, only trigger project and product
+#Customize from gitlab url, to only build project under gitlabUrl/project or gitlabUrl/product
+#The rest project will not auto create or build
 path=${gitrepo: 33 :7}
 if [ "$path" == "project" ] || [ "$path" == "product" ]
 then
@@ -56,6 +61,8 @@ then
 #  	fi
 #  fi
   echo "Jenkins Job has been notified"
+  exit 0
 else
   echo "Jenkins is ignored as per its path: ${path} is not valid"
+  exit 0
 fi
