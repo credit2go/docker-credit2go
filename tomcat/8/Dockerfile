@@ -10,7 +10,7 @@ COPY skywalking /opt/skywalking
 COPY prometheus /opt/prometheus
 COPY docker-entrypoint.sh /opt
 
-ARG skywalking="http://mirrors.tuna.tsinghua.edu.cn/apache/skywalking/6.3.0/apache-skywalking-apm-6.3.0.tar.gz"
+ARG skywalking="http://mirrors.tuna.tsinghua.edu.cn/apache/skywalking/6.4.0/apache-skywalking-apm-6.4.0.tar.gz"
 ARG prometheusjmx="https://maven.aliyun.com/repository/central/io/prometheus/jmx/jmx_prometheus_javaagent/0.12.0/jmx_prometheus_javaagent-0.12.0.jar"
 
 RUN wget -O /opt/prometheus/prometheus-agent.jar ${prometheusjmx} \
