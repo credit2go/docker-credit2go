@@ -1,4 +1,4 @@
 {
   "service_name": "nginx",
-  "collector_host": "oap.apm"
+  "collector_host": "apm.credit2go.cn"
 }
