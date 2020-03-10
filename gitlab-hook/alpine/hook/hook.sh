@@ -3,66 +3,16 @@
 #this file trigger from GitLab-CI by using env defined in gitlab-runner
 
 #define variable from input or env
-string=${CI_PROJECT_DIR}
-substring=/builds/gitlab
-jenkins=${JENKINS_URL}
-gitlab=${CI_API_V4_URL}
-gitlab=${gitlab%api/v4}
+robot -l NONE -r NONE -o NONE -v jenkins:${JENKINS_URL} -v user:${JENKINS_USER} -v password:${JENKINS_TOKEN} -v gitlab:${CI_API_V4_URL} -v token:${GITLAB_API_TOKEN} -v id:${CI_PROJECT_ID} /opt
 
-gitrepo=${string#$substring}
-branch=${CI_COMMIT_REF_NAME}
-#Jenkins Job conf
-job=$jenkins${gitrepo/////job/}
-#job=${job%.git}/job/$branch
-job=${job%.git}
-
-#GitLab Job conf
-gitrepo=$gitlab$gitrepo
-user=${JENKINS_USER}
-token=${JENKINS_TOKEN}
-
-#Check Jenkins Server is accessible
-status=$(curl -s --connect-timeout 10 -I $jenkins/ --user $user:$token |grep HTTP|awk {'print $2'})
-if [ "$status" -ne 200 ]
+#Read job trigger status
+status=$(cat /opt/hook.txt)
+#Check status
+if [ "$status" == "true" ]
 then
-	echo "Jenkins Server is not able to access"
-	exit 1
-fi
-
-#Check Path, only trigger project and product
-#Customize from gitlab url, to only build project under gitlabUrl/project or gitlabUrl/product
-#The rest project will not auto create or build
-path=${gitrepo: 33 :7}
-if [ "$path" == "project" ] || [ "$path" == "product" ]
-then
-  echo "Jenkins Project Address is: ${job}"
-  echo "Git Url is : ${gitrepo}"
-  echo "branch name is : ${branch}"
-  #Always update job from template even job exists
-  echo "Create or Update Jenkins Job"
-  /bin/bash /opt/jenkins/createJenkinsJob.sh $job/ $branch $gitrepo
-
-#  #Check Return Code to choose step
-#  #check job exists or not, if job not exists, then create Jenkins job automaticlly and trigger the first build
-#  status=$(curl -s -I $job/ --user $user:$token|grep HTTP|awk {'print $2'})
-#  if [ "$status" -ne 200 ]
-#  then
-#  	echo "Jenkins Job not configure"
-#  	/bin/bash /opt/jenkins/createJenkinsJob.sh $job/ $branch $gitrepo
-#  else
-#  	#job exists
-#  	#Jenkins Job API Call or Scan Branch
-#  	url=$job/build?cause=$newrev
-#  	status=$(curl -s -I -X POST $url --user $user:$token|grep HTTP|awk {'print $2'})
-#  	if [ "$status" -eq 404 ]
-#  	then
-#  		url=$job/buildWithParameters?cause=${CI_COMMIT_SHA}
-#  		curl -s -X POST $url --user $user:$token
-#  	fi
-#  fi
   echo "Jenkins Job has been notified"
   exit 0
 else
-  echo "Jenkins is ignored as per its path: ${path} is not valid"
-  exit 0
+  echo "Jenkins Job trigger failed"
+  exit 1
 fi
