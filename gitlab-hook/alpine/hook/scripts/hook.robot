@@ -22,12 +22,17 @@ hook
     #Create or Update Jenkins Job, Type is Folder
     ${name}=    Get From Dictionary    ${project}    name
     ${path_with_namespace}=    Get From Dictionary    ${project}    path_with_namespace
+    #Filter Project Path start with project or product
+    ${result}=    Fetch From Left    ${path_with_namespace}    /
+    ${result}=    Set Variable If    '${result}'=="project" or '${result}'=="product"    1    0
+    Should Be True    ${result}==1
+    #Contiune Run if meet requirement
     ${name_with_namespace}=    Get From Dictionary    ${project}    name_with_namespace
     @{folder}=    Split String    ${path_with_namespace}    separator=/
     @{folder_name}=    Split String    ${name_with_namespace}    separator=/
     ${length}=    Get Length    ${folder}
     ${path}=    Set Variable    ${EMPTY}
-    ${path}=    Run Keyword If	${length}>1    recursiveFolder    ${path}    ${folder}    ${folder_name}           
+    ${path}=    Run Keyword If	${length}>=1    recursiveFolder    ${path}    ${folder}    ${folder_name}           
     #Create or Update Jenkins Job
     ${create_path}=    Set Variable    ${path}
     ${path}=    Catenate    SEPARATOR=${EMPTY}    ${path}    /job/${name}

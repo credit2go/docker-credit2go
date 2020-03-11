@@ -14,7 +14,8 @@ ${password}    %{JENKINS_TOKEN}
 CreateJenkinsJob
     [Documentation]    Create Jenkins Job by upload config.xml file
     [Arguments]    ${path}    ${name}    ${file}
-    ${resp}=    Post Request    jenkins    ${path}/createItem?name=${name}    data=${file}    allow_redirects=true
+    &{headers}=  Create Dictionary  Content-Type=application/xml
+    ${resp}=    Post Request    jenkins    ${path}/createItem?name=${name}    headers=&{headers}    data=${file}    allow_redirects=true
     Should Be Equal As Numbers  ${resp.status_code}  200    
 
 CloseConnection
