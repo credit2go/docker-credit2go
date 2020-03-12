@@ -37,4 +37,5 @@ ReadGitProjectInfo
     ...    name_with_namespace=${name_with_namespace}    
     ...    path_with_namespace=${path_with_namespace}    
     ...    http_url_to_repo=${resp.json()["http_url_to_repo"]}
+    ...    archived=${resp.json()["archived"]}
 	[Return]    &{projectInfo}

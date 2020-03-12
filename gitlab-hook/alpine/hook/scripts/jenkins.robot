@@ -81,7 +81,10 @@ SetJenkinsJobConfig
     Set Element Text    ${xml}    xpath=description    text=${data}       
     #Set Job display name
     ${data}=    Get From Dictionary    ${projectInfo}    displayname
-    Set Element Text    ${xml}    xpath=displayName    text=${data}     
+    Set Element Text    ${xml}    xpath=displayName    text=${data} 
+    #Set Job to disable by project archive status 
+    ${data}=    Get From Dictionary    ${projectInfo}    archived
+    Set Element Text    ${xml}    xpath=disabled    text=${data} 
     #Set Job Project parent path
     ${data}=    Get From Dictionary    ${projectInfo}    path_with_namespace
     Set Element Text    ${xml}    xpath=sources/data/jenkins.branch.BranchSource/source/projectOwner    text=${data} 
