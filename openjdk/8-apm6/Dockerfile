@@ -7,22 +7,21 @@ ENV PROMETHEUS_JMX_OPTS=" -javaagent:/opt/prometheus/prometheus-agent.jar=9199:/
 COPY skywalking /opt/skywalking
 COPY prometheus /opt/prometheus
 
-ARG pkgname="apache-skywalking-apm-es7-7.0.0"
-ARG skywalking="https://mirrors.tuna.tsinghua.edu.cn/apache/skywalking/7.0.0/${pkgname}.tar.gz"
+ARG skywalking="http://mirrors.tuna.tsinghua.edu.cn/apache/skywalking/6.4.0/apache-skywalking-apm-6.4.0.tar.gz"
 ARG prometheusjmx="https://maven.aliyun.com/repository/central/io/prometheus/jmx/jmx_prometheus_javaagent/0.12.0/jmx_prometheus_javaagent-0.12.0.jar"
 
 RUN wget -O /opt/prometheus/prometheus-agent.jar ${prometheusjmx} \
     && wget -O /tmp/skywalking.tar.gz ${skywalking} \
     && cd /tmp/ \
     && tar -zxvf skywalking.tar.gz \
-    && mv apache-skywalking* ${pkgname} \
-    && mv /tmp/${pkgname}/agent/activations /opt/skywalking/activations \
-    && mv /tmp/${pkgname}/agent/plugins /opt/skywalking/plugins \
-    && mv /tmp/${pkgname}/agent/optional-plugins/apm-gson*.jar /opt/skywalking/plugins/ \
-    && mv /tmp/${pkgname}/agent/optional-plugins/apm-trace-ignore-plugin*.jar /opt/skywalking/plugins/ \
-    && mv /tmp/${pkgname}/agent/skywalking-agent.jar /opt/skywalking/skywalking-agent.jar \
+    && mv /tmp/apache-skywalking-apm-bin/agent/activations /opt/skywalking/activations \
+    && mv /tmp/apache-skywalking-apm-bin/agent/plugins /opt/skywalking/plugins \
+    && mv /tmp/apache-skywalking-apm-bin/agent/optional-plugins/apm-gson*.jar /opt/skywalking/plugins/ \
+    && mv /tmp/apache-skywalking-apm-bin/agent/optional-plugins/apm-trace-ignore-plugin*.jar /opt/skywalking/plugins/ \
+    && mv /tmp/apache-skywalking-apm-bin/agent/skywalking-agent.jar /opt/skywalking/skywalking-agent.jar \
     && rm -rf /tmp/* \
     && mkdir -p /opt/app/log \
+    && ln -s /opt/app/log /opt/skywalking/logs \
     && echo "upgrade to fix Vulnerabilities" \
     && echo "https://mirrors.aliyun.com/alpine/v3.9/main" > /etc/apk/repositories \
     && echo "https://mirrors.aliyun.com/alpine/v3.9/community" >> /etc/apk/repositories \
