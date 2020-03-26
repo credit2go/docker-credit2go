@@ -1,7 +1,13 @@
-FROM alpine:3.9 AS builder
+FROM alpine:3.10 AS builder
 
-RUN echo "https://mirrors.aliyun.com/alpine/v3.9/main" > /etc/apk/repositories && \
-    echo "https://mirrors.aliyun.com/alpine/v3.9/community" >> /etc/apk/repositories && \
+ARG TENGINE="http://tengine.taobao.org/download/tengine-2.3.1.tar.gz" 
+ARG OPENTRACE="https://github.com/opentracing/opentracing-cpp/archive/v1.5.1.tar.gz"
+ARG ZIPKIN="https://github.com/rnburn/zipkin-cpp-opentracing/archive/v0.5.2.tar.gz"
+ARG NGINX_TRACE="https://github.com/opentracing-contrib/nginx-opentracing/archive/v0.8.0.tar.gz"
+ARG NGINX_VTS="https://github.com/vozlt/nginx-module-vts/archive/v0.1.18.tar.gz"
+
+RUN echo "https://mirrors.aliyun.com/alpine/v3.10/main" > /etc/apk/repositories && \
+    echo "https://mirrors.aliyun.com/alpine/v3.10/community" >> /etc/apk/repositories && \
   	CONFIG="\
   		--prefix=/etc/nginx \
       --sbin-path=/usr/sbin/nginx \
@@ -60,73 +66,85 @@ RUN echo "https://mirrors.aliyun.com/alpine/v3.9/main" > /etc/apk/repositories &
       --add-module=modules/ngx_http_user_agent_module \
       --add-module=modules/ngx_opentrace \
       --add-module=modules/nginx-module-vts \
-#      --with-cc-opt='-Os -fomit-frame-pointer' \
       --with-cc-opt=-Os  \
-      --with-ld-opt=-Wl,--as-needed \
-	" \
-	&& addgroup -S nginx \
-	&& adduser -D -S -h /var/cache/nginx -s /sbin/nologin -G nginx nginx \
-	&& apk add --no-cache curl-dev git gcc libc-dev make openssl-dev pcre-dev zlib-dev linux-headers curl gnupg1 libxslt-dev gd-dev geoip-dev cmake g++ perl-dev \
-  && cd /opt \
-  && git clone -b v1.5.1 https://github.com/opentracing/opentracing-cpp.git \
-  && cd opentracing-cpp \
-  && mkdir .build \
-  && cd .build \
-  && cmake -DBUILD_SHARED_LIBS=1 -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF .. \
-  && make \
-  && make install \
-  && cd /opt \
-  && git clone -b v0.5.2 https://github.com/rnburn/zipkin-cpp-opentracing.git \
-  && cd zipkin-cpp-opentracing \
-  && mkdir .build \
-  && cd .build \
-  && cmake  -DBUILD_SHARED_LIBS=1 -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF .. \
-  && make \
-  && make install \
-  && cd /opt \
-  && git clone -b v0.8.0 https://github.com/opentracing-contrib/nginx-opentracing.git \
-  && git clone -b v0.1.18 https://github.com/vozlt/nginx-module-vts.git \
-  && git clone -b 2.3.1 https://github.com/alibaba/tengine.git \
-  && ln -s /opt/nginx-opentracing/opentracing /opt/tengine/modules/ngx_opentrace \
-  && ln -s /opt/nginx-module-vts /opt/tengine/modules/nginx-module-vts \
-  && cd tengine \
-	&& ./configure $CONFIG \
-	&& make \
-	&& make install \
-	&& apk del git \
-	&& rm -rf /opt/* \
-	\
-	# Bring in tzdata so users could set the timezones through the environment
-	# variables
-	&& apk add --no-cache tzdata \
-	\
-	# forward request and error logs to docker log collector
-	&& ln -sf /dev/stdout /var/log/nginx/access.log \
-	&& ln -sf /dev/stderr /var/log/nginx/error.log
+      --with-ld-opt=-Wl,-rpath,--as-needed \
+	  " && \
+    addgroup -S nginx && \
+    adduser -D -S -h /var/cache/nginx -s /sbin/nologin -G nginx nginx && \
+    apk add --no-cache curl-dev gcc libc-dev make openssl-dev pcre-dev zlib-dev linux-headers curl gnupg1 libxslt-dev gd-dev geoip-dev cmake g++ perl-dev && \
+    #Download Open Trace Lib
+    wget -O /opt/opentracing.tar.gz ${OPENTRACE} && \
+    cd /opt && \
+    tar -zxvf opentracing.tar.gz && \
+    rm -rf opentracing.tar.gz && \
+    mv opentracing* opentracing && \    
+    cd opentracing && \
+    mkdir .build && \
+    cd .build && \
+    cmake -DBUILD_SHARED_LIBS=1 -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF .. && \
+    make && \
+    make install && \
+    #Download Open Trace Zipkin Lib
+    wget -O /opt/zipkin.tar.gz ${ZIPKIN} && \
+    cd /opt && \
+    tar -zxvf zipkin.tar.gz && \
+    rm -rf zipkin.tar.gz && \
+    mv zipkin* zipkin && \    
+    cd zipkin && \
+    mkdir .build && \
+    cd .build && \
+    cmake  -DBUILD_SHARED_LIBS=1 -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF .. && \
+    make && \
+    make install && \
+    #Download Nginx Open Trace Module
+    wget -O /opt/nginx-opentracing.tar.gz ${NGINX_TRACE} && \
+    cd /opt && \
+    tar -zxvf nginx-opentracing.tar.gz && \
+    rm -rf nginx-opentracing.tar.gz && \
+    mv nginx-opentracing* nginx-opentracing && \    
+    #Download Nginx VTS Module
+    wget -O /opt/nginx-module-vts.tar.gz ${NGINX_VTS} && \
+    cd /opt && \
+    tar -zxvf nginx-module-vts.tar.gz && \
+    rm -rf nginx-module-vts.tar.gz && \
+    mv nginx-module-vts* nginx-module-vts && \      
+    #Download Tengine
+    wget -O /opt/tengine.tar.gz ${TENGINE} && \
+    cd /opt/ && \
+    tar -zxvf tengine.tar.gz && \
+    rm -rf tengine.tar.gz && \
+    mv tengine* tengine && \
+    ln -s /opt/nginx-opentracing/opentracing /opt/tengine/modules/ngx_opentrace && \
+    ln -s /opt/nginx-module-vts /opt/tengine/modules/nginx-module-vts && \
+    cd tengine && \
+    ./configure $CONFIG && \
+    make && \
+    make install
 
-FROM alpine:3.9
-RUN echo "https://mirrors.aliyun.com/alpine/v3.9/main" > /etc/apk/repositories \
-    && echo "https://mirrors.aliyun.com/alpine/v3.9/community" >> /etc/apk/repositories \
-	&& addgroup -S nginx \
-	&& adduser -D -S -h /var/cache/nginx -s /sbin/nologin -G nginx nginx \
-	&& apk add --no-cache gcc openssl pcre zlib gnupg1 libxslt gd geoip perl tzdata \
-	&& echo "upgrade to fix Vulnerabilities" \
-    && apk upgrade --no-cache \
-	# forward request and error logs to docker log collector
-	&& mkdir -p /var/log/nginx \
-	&& ln -sf /dev/stdout /var/log/nginx/access.log \
-	&& ln -sf /dev/stderr /var/log/nginx/error.log
+FROM alpine:3.10
+RUN echo "https://mirrors.aliyun.com/alpine/v3.10/main" > /etc/apk/repositories && \
+    echo "https://mirrors.aliyun.com/alpine/v3.10/community" >> /etc/apk/repositories && \
+    addgroup -S nginx && \
+    adduser -D -S -h /var/cache/nginx -s /sbin/nologin -G nginx nginx && \
+	  apk add --no-cache gcc openssl pcre zlib gnupg1 libxslt gd geoip perl tzdata && \
+	  echo "upgrade to fix Vulnerabilities" && \
+    apk upgrade --no-cache && \
+	  # forward request and error logs to docker log collector
+	  mkdir -p /var/log/nginx && \
+    ln -sf /dev/stdout /var/log/nginx/access.log && \
+    ln -sf /dev/stderr /var/log/nginx/error.log
 
 COPY --from=builder /etc/nginx /etc/nginx
 COPY --from=builder /usr/sbin/nginx /usr/sbin/nginx
 COPY --from=builder /usr/lib/nginx /usr/lib/nginx
 COPY --from=builder /usr/local/lib/ /usr/local/lib
 COPY nginx.conf /etc/nginx/nginx.conf
-COPY nginx.vh.default.conf /etc/nginx/conf.d/default.conf
-COPY zipkin.json /etc/zipkin/zipkin.json
+COPY conf.d /etc/nginx/conf.d/
+#Copy Default Nginx entry point file
+COPY docker-entrypoint.sh /opt
+
+ENTRYPOINT ["sh", "/opt/docker-entrypoint.sh"]
 
 EXPOSE 80
 
 STOPSIGNAL SIGTERM
-
-CMD ["nginx", "-g", "daemon off;"]
