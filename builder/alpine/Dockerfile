@@ -1,7 +1,7 @@
 FROM alpine:3.11
 
 ARG HELM_VERSION="v3.1.2"
-ARG HELM="https://get.helm.sh/helm-${HELM_VERSION}-linux-amd64.tar.gz"
+ARG HELM="https://mirrors.huaweicloud.com/helm/${HELM_VERSION}/helm-${HELM_VERSION}-linux-amd64.tar.gz"
 ARG KUBE_VERSION="v1.17.4"
 ARG KUBECTL="https://storage.googleapis.com/kubernetes-release/release/${KUBE_VERSION}/bin/linux/amd64/kubectl"
 ARG CLAIR_SCANNER_VERSION="v12"
@@ -24,6 +24,10 @@ RUN echo "https://mirrors.aliyun.com/alpine/v3.11/main" > /etc/apk/repositories 
     #make sure with execution permission
     chmod a+x /usr/bin/* && \
     #clean cache
-    rm -rf /tmp/*
+    rm -rf /tmp/* && \
+    #work with mvn frontend plugin
+    mkdir /opt/node && \
+    ln -s /usr/bin/node /opt/node/node && \
+    ln -s /usr/lib/node_modules /opt/node/node_modules
 
 CMD ["bash"]
