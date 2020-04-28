@@ -2,8 +2,8 @@ FROM alpine:3.10 AS builder
 
 ARG TENGINE="https://tengine.taobao.org/download/tengine-2.3.2.tar.gz"
 ARG LUAJIT="https://github.com/openresty/luajit2/archive/v2.1-20200102.tar.gz"
-ARG PROMETHEUS="https://github.com/knyar/nginx-lua-prometheus/archive/master.zip"
-ARG SKYWALKING="https://github.com/apache/skywalking-nginx-lua/archive/master.zip"
+ARG PROMETHEUS="https://github.com/knyar/nginx-lua-prometheus/archive/0.20200420.zip"
+ARG SKYWALKING="https://github.com/credit2go/skywalking-nginx-lua/archive/v0.1.1.zip"
 
 RUN echo "https://mirrors.aliyun.com/alpine/v3.10/main" > /etc/apk/repositories && \
     echo "https://mirrors.aliyun.com/alpine/v3.10/community" >> /etc/apk/repositories && \
@@ -99,7 +99,7 @@ RUN echo "https://mirrors.aliyun.com/alpine/v3.10/main" > /etc/apk/repositories 
     unzip prometheus.zip && \
     unzip skywalking.zip && \
     mkdir -p /opt/lua-lib && \
-    mv /opt/nginx-lua-prometheus*/prometheus.lua /opt/lua-lib && \
+    mv /opt/nginx-lua-prometheus*/prometheus*.lua /opt/lua-lib && \
     mv /opt/skywalking-nginx-lua*/lib/skywalking/* /opt/lua-lib
 
 FROM alpine:3.10

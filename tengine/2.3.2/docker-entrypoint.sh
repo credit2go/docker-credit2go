@@ -57,17 +57,37 @@ init_worker_by_lua_block {
     -- Set service name
     metadata_buffer:set('serviceName', "${ZIPKIN_SERVICE_NAME:-tengine-2.3.2}")
     -- Instance means the number of Nginx deployment, does not mean the worker instances
-    metadata_buffer:set('serviceInstanceName', '')
+    metadata_buffer:set('serviceInstanceName', '${HOSTNAME}')
 
     require("client"):startBackendTimer("http://${ZIPKIN_HOST:-oap.apm}:${ZIPKIN_PORT:-12800}")
+
+    -- fix for enable prometheus metrics
+    prometheus:init_worker()
 }
 EOT
-    echo -e "\033[31m ====Generate opentrace config Done==== \033[0m"
+    echo -e "\033[31m ====Generate enable opentrace config Done==== \033[0m"
 }
 
 disableOpenTrace(){
     opentrace="/etc/nginx/conf.d/skywalking.conf"
-    echo "" > ${opentrace}
+    cat <<EOT > ${opentrace}
+init_worker_by_lua_block {
+    -- fix for enable prometheus metrics
+    prometheus:init_worker()
+}
+EOT
+    echo -e "\033[31m ====Generate disable opentrace config Done==== \033[0m"
+}
+
+update_ZIPKIN_NAMESPACE(){
+    ZIPKIN_NAMESPACE=${ZIPKIN_NAMESPACE:-}
+    if [[ "$ZIPKIN_NAMESPACE" != "" ]]; then
+      #update zipkin namespace with current value
+      sed -i "s/ZIPKIN_NAMESPACE/\"${ZIPKIN_NAMESPACE}\"/g" /etc/nginx/conf.d/default.conf
+    else
+      #remove ZIPKIN NAMESPACE as per it is blank
+      sed -i 's/,ZIPKIN_NAMESPACE//g' /etc/nginx/conf.d/default.conf
+    fi
 }
 echo "[Entrypoint] Tengine Docker Image with Zipkin Open Trace Conf Generator"
 
@@ -85,10 +105,14 @@ if [[ "$LOAD_NGINX_CONF_FROM_VOLUME" != "true" ]]; then
     if [[ "$OPENTRACE" == "on" ]]; then
         echo "enable skywalking"
         generateOpenTrace
+        update_ZIPKIN_NAMESPACE
     else
         echo "disable skywalking"
         disableOpenTrace
     fi
     echo "Generated Nginx default Conf"
 fi
-nginx -g 'daemon off;'
+
+#nginx -g 'daemon off;'
+nginx
+tail -f /var/log/nginx/*.log
