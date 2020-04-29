@@ -40,6 +40,21 @@ EOT
     echo -e "\033[31m ====Generate real_ip.conf Done==== \033[0m"
 }
 
+#Update Skywalking trace info base on ENV
+update_SkywalkingTraceInfo(){
+    ZIPKIN_NAMESPACE=${ZIPKIN_NAMESPACE:-}
+    #update upstream service name
+    sed -i "s/ZIPKIN_SERVICE_NAME/\"${ZIPKIN_SERVICE_NAME:-tengine-2.3.2}\"/g" /etc/nginx/conf.d/default.conf
+    #update Skywalking Agent Namespace, default will be null
+    if [[ "$ZIPKIN_NAMESPACE" != "" ]]; then
+      #update zipkin namespace with current value
+      sed -i "s/ZIPKIN_NAMESPACE/\"${ZIPKIN_NAMESPACE}\"/g" /etc/nginx/conf.d/default.conf
+    else
+      #remove ZIPKIN NAMESPACE as per it is blank
+      sed -i 's/,ZIPKIN_NAMESPACE//g' /etc/nginx/conf.d/default.conf
+    fi
+}
+
 #write opentrace conf file before nginx start
 generateOpenTrace(){
     opentrace="/etc/nginx/conf.d/skywalking.conf"
@@ -65,6 +80,7 @@ init_worker_by_lua_block {
     prometheus:init_worker()
 }
 EOT
+    update_SkywalkingTraceInfo
     echo -e "\033[31m ====Generate enable opentrace config Done==== \033[0m"
 }
 
@@ -76,19 +92,11 @@ init_worker_by_lua_block {
     prometheus:init_worker()
 }
 EOT
+    #remove skywalking apm trace in default.conf
+    sed -i '/^        ####Below/,/^        ####Above/d' /etc/nginx/conf.d/default.conf
     echo -e "\033[31m ====Generate disable opentrace config Done==== \033[0m"
 }
 
-update_ZIPKIN_NAMESPACE(){
-    ZIPKIN_NAMESPACE=${ZIPKIN_NAMESPACE:-}
-    if [[ "$ZIPKIN_NAMESPACE" != "" ]]; then
-      #update zipkin namespace with current value
-      sed -i "s/ZIPKIN_NAMESPACE/\"${ZIPKIN_NAMESPACE}\"/g" /etc/nginx/conf.d/default.conf
-    else
-      #remove ZIPKIN NAMESPACE as per it is blank
-      sed -i 's/,ZIPKIN_NAMESPACE//g' /etc/nginx/conf.d/default.conf
-    fi
-}
 echo "[Entrypoint] Tengine Docker Image with Zipkin Open Trace Conf Generator"
 
 #Default Enable ZIPKIN Open Trace
@@ -105,7 +113,6 @@ if [[ "$LOAD_NGINX_CONF_FROM_VOLUME" != "true" ]]; then
     if [[ "$OPENTRACE" == "on" ]]; then
         echo "enable skywalking"
         generateOpenTrace
-        update_ZIPKIN_NAMESPACE
     else
         echo "disable skywalking"
         disableOpenTrace
